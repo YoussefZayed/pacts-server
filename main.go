@@ -12,7 +12,6 @@ import (
 func main() {
 	defer db.DB.Close()
 
-	http.HandleFunc("/")
 	r := mux.NewRouter()
 
 	fmt.Println("Server listening on :6080")
