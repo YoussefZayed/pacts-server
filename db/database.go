@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"log"
+	"math/rand"
 	"time"
 
 	_ "modernc.org/sqlite"
@@ -177,5 +178,52 @@ func DeleteTile(id int) error {
 		return err
 	}
 
+	return nil
+}
+
+func GetAllTiles() ([]Tile, error) {
+	rows, err := DB.Query(`
+        SELECT id, x_coordinate, y_coordinate, type, created_at, updated_at
+        FROM tile
+    `)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var tiles []Tile
+	for rows.Next() {
+		var tile Tile
+		err = rows.Scan(&tile.ID, &tile.XCoordinate, &tile.YCoordinate, &tile.Type, &tile.CreatedAt, &tile.UpdatedAt)
+		if err != nil {
+			return nil, err
+		}
+		tiles = append(tiles, tile)
+	}
+
+	// Check for any error encountered during iteration
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return tiles, nil
+}
+
+func InitTiles(maxX, maxY int) error {
+	tileTypes := []string{"mountain", "grass", "water"}
+	for x := 0; x <= maxX; x++ {
+		for y := 0; y <= maxY; y++ {
+			tileType := tileTypes[rand.Intn(len(tileTypes))]
+			tile := &Tile{
+				XCoordinate: x,
+				YCoordinate: y,
+				Type:        tileType,
+			}
+			_, err := CreateTile(tile)
+			if err != nil {
+				return err
+			}
+		}
+	}
 	return nil
 }
